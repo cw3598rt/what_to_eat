@@ -6,6 +6,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final imagePicker = ImagePicker();
 final gemini = Gemini.instance;
@@ -26,7 +27,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   File? _pickedImage;
   String? _result;
-
+  String? _pictureResult;
   void _initLocation() async {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
@@ -65,6 +66,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
+
     _initLocation();
   }
 
@@ -72,12 +74,22 @@ class _SearchScreenState extends State<SearchScreen> {
   void didUpdateWidget(covariant SearchScreen oldWidget) {
     // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
-    setState(() {
-      _result = null;
-    });
+
     if (widget.detailOption) {
       _initLocation();
+    } else {
+      gemini.cancelRequest();
+      setState(() {
+        _result = null;
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    gemini.cancelRequest();
   }
 
   void _openModal() async {
@@ -122,20 +134,31 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     final response = await gemini.textAndImage(
         text:
-            "first of all, must check whether the picture only include food or food ingredient only or not. if there are no food or food ingredient, then show wrong picture text. and if there are food or food ingredient, then could you recommend any food using this picture? must use the ingredient on picture only. Answer must be with name and recipe of the recommended food only  beside recommended food name and recipe, please do not write on your answer!",
+            "first of all, must check whether the picture only include food or food ingredient only or not. if there are no food or food ingredient, then show wrong picture text. and if there are food or food ingredient, then could you recommend any food using this picture? must use the ingredient on picture only. Answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer!",
         images: [File(result!.path).readAsBytesSync()]);
 
     if (response != null) {
       if (response.content != null) {
         setState(() {
-          _result = response.content!.parts![0].text;
+          _pictureResult = response.content!.parts![0].text;
         });
+        RegExp regExp = RegExp(r'^(\*\*\d\.)(.*)(\*\*)$',
+            multiLine: true, caseSensitive: false);
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        List<String> menuNames = regExp
+            .allMatches(response.content!.parts![0].text!)
+            .map((item) => item.group(0).toString())
+            .toList();
+
+        await prefs.setStringList('menus', menuNames);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // print(_result != null ? regExp.allMatches(_result!): "aa");
+
     return Column(
       children: [
         !widget.detailOption
@@ -177,21 +200,34 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         GeminiResponseTypeView(
           builder: (context, child, response, loading) {
-            if (_result != null) {
-              return SizedBox(
-                width: double.infinity,
-                height: 600,
-                child: Markdown(
-                  data: _result!,
-                  selectable: true,
-                ),
-              );
+            if (widget.detailOption) {
+              if (_result != null) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 600,
+                  child: Markdown(
+                    data: _result!,
+                    selectable: true,
+                  ),
+                );
+              } else {
+                return Text("Searching...");
+              }
             } else {
-              return widget.detailOption
-                  ? Text("Searching...")
-                  : _pickedImage != null
-                      ? CircularProgressIndicator()
-                      : Text("...");
+              if (_pictureResult != null) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 600,
+                  child: Markdown(
+                    data: _pictureResult!,
+                    selectable: true,
+                  ),
+                );
+              } else {
+                return _pickedImage != null
+                    ? CircularProgressIndicator()
+                    : Text("...");
+              }
             }
           },
         )

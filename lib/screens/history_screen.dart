@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class HistroyScreen extends StatefulWidget {
-  HistroyScreen({super.key});
+  HistroyScreen({
+    super.key,
+  });
 
   @override
   State<HistroyScreen> createState() {
@@ -10,6 +12,12 @@ class HistroyScreen extends StatefulWidget {
 }
 
 class _HistroyScreenState extends State<HistroyScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:what_to_eat/screens/search_screen.dart';
-import 'package:what_to_eat/screens/text_screen.dart';
+import 'package:what_to_eat/screens/history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -18,48 +18,57 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "what to eat today",
-          style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+      appBar: _currentNavIndex == 0
+          ? AppBar(
+              title: Text(
+                "what to eat today",
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
               ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isToday = false;
-              });
-            },
-            child: Text("Picture"),
-            style: TextButton.styleFrom(
-              backgroundColor: !_isToday
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.white,
-              foregroundColor: !_isToday
-                  ? Colors.white
-                  : Theme.of(context).colorScheme.primary,
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isToday = false;
+                    });
+                  },
+                  child: Text("Picture"),
+                  style: TextButton.styleFrom(
+                    backgroundColor: !_isToday
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.white,
+                    foregroundColor: !_isToday
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isToday = true;
+                    });
+                  },
+                  child: Text("Today"),
+                  style: TextButton.styleFrom(
+                    backgroundColor: _isToday
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.white,
+                    foregroundColor: _isToday
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            )
+          : AppBar(
+              title: Text(
+                "what to eat today",
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isToday = true;
-              });
-            },
-            child: Text("Today"),
-            style: TextButton.styleFrom(
-              backgroundColor: _isToday
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.white,
-              foregroundColor: _isToday
-                  ? Colors.white
-                  : Theme.of(context).colorScheme.primary,
-            ),
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         child: _currentNavIndex == 0
             ? SearchScreen(detailOption: _isToday)
