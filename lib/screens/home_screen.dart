@@ -69,11 +69,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
               ),
             ),
-      body: SingleChildScrollView(
-        child: _currentNavIndex == 0
-            ? SearchScreen(detailOption: _isToday)
-            : HistroyScreen(),
-      ),
+      body: _currentNavIndex == 0
+          ? SingleChildScrollView(child: SearchScreen(detailOption: _isToday))
+          : HistroyScreen(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentNavIndex,
         onTap: (value) {

@@ -28,6 +28,9 @@ class _SearchScreenState extends State<SearchScreen> {
   File? _pickedImage;
   String? _result;
   String? _pictureResult;
+
+  bool _isKorean = false;
+  bool _isLoading = false;
   void _initLocation() async {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
@@ -81,6 +84,7 @@ class _SearchScreenState extends State<SearchScreen> {
       gemini.cancelRequest();
       setState(() {
         _result = null;
+        _isKorean = false;
       });
     }
   }
@@ -93,6 +97,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openModal() async {
+    setState(() {
+      _pictureResult = null;
+      _pickedImage = null;
+    });
+
     ImageSource? source;
     await showDialog(
       context: context,
@@ -142,25 +151,79 @@ class _SearchScreenState extends State<SearchScreen> {
         setState(() {
           _pictureResult = response.content!.parts![0].text;
         });
-        RegExp regExp = RegExp(r'^(\*\*\d\.)(.*)(\*\*)$',
-            multiLine: true, caseSensitive: false);
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-        List<String> menuNames = regExp
-            .allMatches(response.content!.parts![0].text!)
-            .map((item) => item.group(0).toString())
-            .toList();
 
-        await prefs.setStringList('menus', menuNames);
+        // RegExp regExp = RegExp(r'(?<=## \*\*).*(?=\*\*)',
+        //     multiLine: true, caseSensitive: false);
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        // List<String> menuNames = regExp
+        //     .allMatches(response.content!.parts![0].text!)
+        //     .map((item) => item.group(0).toString())
+        //     .toList();
+
+        await prefs.setString('menu', response.content!.parts![0].text!);
       }
     }
   }
 
+  void _translate(String lang) async {
+    if (widget.detailOption) {
+      setState(() {
+        _isLoading = true;
+      });
+      var response = await gemini.text("please translate $_result in $lang");
+
+      if (response != null) {
+        if (response.content != null) {
+          setState(() {
+            _result = response.content!.parts![0].text;
+            _isKorean = !_isKorean;
+          });
+        }
+      }
+    } else {
+      setState(() {
+        _isLoading = true;
+      });
+      var response =
+          await gemini.text("please translate $_pictureResult in $lang");
+
+      if (response != null) {
+        if (response.content != null) {
+          setState(() {
+            _pictureResult = response.content!.parts![0].text;
+            _isKorean = !_isKorean;
+          });
+        }
+      }
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // print(_result != null ? regExp.allMatches(_result!): "aa");
-
     return Column(
       children: [
+        Align(
+          alignment: Alignment.topRight,
+          child: TextButton(
+            onPressed: () {
+              if (widget.detailOption) {
+                if (_result == null) {
+                  return null;
+                }
+                _isKorean ? _translate("English") : _translate("Korean");
+              } else {
+                if (_pictureResult == null) {
+                  return null;
+                }
+                _isKorean ? _translate("English") : _translate("Korean");
+              }
+            },
+            child: _isKorean ? Text("English") : Text("Korean"),
+          ),
+        ),
         !widget.detailOption
             ? Padding(
                 padding: const EdgeInsets.all(16),
@@ -198,39 +261,48 @@ class _SearchScreenState extends State<SearchScreen> {
         SizedBox(
           height: 24,
         ),
-        GeminiResponseTypeView(
-          builder: (context, child, response, loading) {
-            if (widget.detailOption) {
-              if (_result != null) {
-                return SizedBox(
-                  width: double.infinity,
-                  height: 600,
-                  child: Markdown(
-                    data: _result!,
-                    selectable: true,
-                  ),
-                );
-              } else {
-                return Text("Searching...");
-              }
-            } else {
-              if (_pictureResult != null) {
-                return SizedBox(
-                  width: double.infinity,
-                  height: 600,
-                  child: Markdown(
-                    data: _pictureResult!,
-                    selectable: true,
-                  ),
-                );
-              } else {
-                return _pickedImage != null
-                    ? CircularProgressIndicator()
-                    : Text("...");
-              }
-            }
-          },
-        )
+        !_isLoading
+            ? GeminiResponseTypeView(
+                builder: (context, child, response, loading) {
+                  if (widget.detailOption) {
+                    if (_result != null) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 600,
+                        child: Markdown(
+                          data: _result!,
+                          selectable: true,
+                        ),
+                      );
+                    } else {
+                      return Text("Searching...");
+                    }
+                  } else {
+                    if (_pictureResult != null) {
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 600,
+                        child: Markdown(
+                          data: _pictureResult!,
+                          selectable: true,
+                        ),
+                      );
+                    } else {
+                      return _pickedImage != null
+                          ? CircularProgressIndicator()
+                          : Text("...");
+                    }
+                  }
+                },
+              )
+            : SizedBox(
+                width: double.infinity,
+                height: 600,
+                child: Align(
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
+                ),
+              ),
       ],
     );
   }
