@@ -74,7 +74,7 @@ class _HistroyScreenState extends State<HistroyScreen> {
                 return CircularProgressIndicator();
               }
               if (snapshot.data == null || snapshot.data!.isEmpty) {
-                return Text("no data");
+                return Center(child: Text("no data"));
               }
 
               return Padding(
