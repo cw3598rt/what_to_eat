@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:what_to_eat/screens/home_screen.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
   Gemini.init(
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'What to eat',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
