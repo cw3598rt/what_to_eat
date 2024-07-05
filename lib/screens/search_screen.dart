@@ -34,7 +34,7 @@ class _SearchScreenState extends State<SearchScreen>
   File? _pickedImage;
   String? _result;
   String? _pictureResult;
-
+  String _isConnected = "";
   bool _isKorean = false;
   bool _isLoading = false;
   void _initLocation() async {
@@ -67,15 +67,21 @@ class _SearchScreenState extends State<SearchScreen>
 
     locationData = await location.getLocation();
 
-    var response = await gemini.text(
-        "You are a best chef. and Please suggest me top1 food for today. Your answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer! when you search the reference for the suggestion, please consider certain country where include this location in latitude ${locationData.latitude} and longitude ${locationData.longitude} and time must be ${DateTime.now().hour}");
-
-    if (response != null) {
-      if (response.content != null) {
-        setState(() {
-          _result = response.content!.parts![0].text;
-        });
+    try {
+      var response = await gemini.text(
+          "You are a best chef. and Please suggest me top1 food for today. Your answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer! when you search the reference for the suggestion, please consider certain country where include this location in latitude ${locationData.latitude} and longitude ${locationData.longitude} and time must be ${DateTime.now().hour}");
+      if (response != null) {
+        if (response.content != null) {
+          setState(() {
+            _isConnected = "";
+            _result = response.content!.parts![0].text;
+          });
+        }
       }
+    } catch (e) {
+      setState(() {
+        _isConnected = "wrong";
+      });
     }
   }
 
@@ -235,27 +241,34 @@ class _SearchScreenState extends State<SearchScreen>
       _pickedImage = File(result!.path);
     });
 
-    final response = await gemini.textAndImage(
-        text:
-            "first of all, must check whether the picture only include food or food ingredient only or not. if there are no food or food ingredient, then show wrong picture text. and if there are food or food ingredient, then could you recommend any food using this picture? must use the ingredient on picture only. Answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer!",
-        images: [File(result!.path).readAsBytesSync()]);
+    try {
+      final response = await gemini.textAndImage(
+          text:
+              "first of all, must check whether the picture only include food or food ingredient only or not. if there are no food or food ingredient, then show wrong picture text. and if there are food or food ingredient, then could you recommend any food using this picture? must use the ingredient on picture only. Answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer!",
+          images: [File(result!.path).readAsBytesSync()]);
 
-    if (response != null) {
-      if (response.content != null) {
-        setState(() {
-          _pictureResult = response.content!.parts![0].text;
-        });
+      if (response != null) {
+        if (response.content != null) {
+          setState(() {
+            _isConnected = "";
+            _pictureResult = response.content!.parts![0].text;
+          });
 
-        // RegExp regExp = RegExp(r'(?<=## \*\*).*(?=\*\*)',
-        //     multiLine: true, caseSensitive: false);
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-        // List<String> menuNames = regExp
-        //     .allMatches(response.content!.parts![0].text!)
-        //     .map((item) => item.group(0).toString())
-        //     .toList();
+          // RegExp regExp = RegExp(r'(?<=## \*\*).*(?=\*\*)',
+          //     multiLine: true, caseSensitive: false);
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          // List<String> menuNames = regExp
+          //     .allMatches(response.content!.parts![0].text!)
+          //     .map((item) => item.group(0).toString())
+          //     .toList();
 
-        await prefs.setString('menu', response.content!.parts![0].text!);
+          await prefs.setString('menu', response.content!.parts![0].text!);
+        }
       }
+    } catch (e) {
+      setState(() {
+        _isConnected = "wrong";
+      });
     }
   }
 
@@ -388,6 +401,11 @@ class _SearchScreenState extends State<SearchScreen>
                         );
                       }
                     } else {
+                      if (_isConnected == "wrong") {
+                        return Text(
+                            "To get AI suggestion needs internet connection...");
+                      }
+
                       return Text("Searching...");
                     }
                   } else {
@@ -403,7 +421,10 @@ class _SearchScreenState extends State<SearchScreen>
                     } else {
                       return _pickedImage != null
                           ? CircularProgressIndicator()
-                          : Text("...");
+                          : _isConnected == "wrong"
+                              ? Text(
+                                  "To get AI suggestion needs internet connection...")
+                              : Text("...");
                     }
                   }
                 },
