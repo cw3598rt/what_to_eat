@@ -1,16 +1,21 @@
 # what_to_eat
 
-A new Flutter project.
+매일 뭐를 먹을지에 대한 고민을 해결하기 위해 ai를 이용해 보자.
 
-## Getting Started
+## 다운로드 링크
 
-This project is a starting point for a Flutter application.
+심사중...
 
-A few resources to get you started if this is your first Flutter project:
+## 사용법
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+![0x0ss](https://github.com/cw3598rt/what_to_eat/assets/79645896/e8adff98-89f0-472d-a810-761811d6ee20)
+앱을 오픈시 바로 보이는 스크린이며, 최상단 첫화면에는 오늘 버튼이 적용되어있어 오늘날짜, 사용자의 위치와 시간대에 가장많이 검색되고 있는 메뉴를 AI가 추천해준다.
+오늘버튼 바로 밑에는 한국어 영어 번역 버튼이 있다.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+![0x0ss (1)](https://github.com/cw3598rt/what_to_eat/assets/79645896/6e5d0025-5bf3-43c5-90b1-a2647c4114b5)
+
+상단의 사진버튼을 누르면 직접 사진을 찍어서 메뉴를 추천받아볼 수 있는데, 사진으로는 음식사진 혹은 음식 재료들을 찍으면 그에 맞게 추천해준다.
+
+![0x0ss (2)](https://github.com/cw3598rt/what_to_eat/assets/79645896/8c175f50-9b17-4117-8642-045399e38a9b)
+
+하단의 히스토리 버튼을 누르면 보여지는 스크린이며, 내가 사진으로 검색한 내용이 기록되어 진다. 좌 혹은 우로 슬라이드시 삭제가 된다.
