@@ -27,15 +27,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>To get nicer suggestion need picture from camera</string>
+	<string>The app uses camera access to get AI menu suggestion.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>To get nicer suggestion need location</string>
+	<string>The app uses location access to get AI menu suggestion.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>To get nicer suggestion need location</string>
+	<string>The app uses location access to get AI menu suggestion.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>To get nicer suggestion need location</string>
+	<string>The app uses location access to get AI menu suggestion.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>To get nicer suggestion need picture from gallery</string>
+	<string>The app uses gallery access to get AI menu suggestion.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

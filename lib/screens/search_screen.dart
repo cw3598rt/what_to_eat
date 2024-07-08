@@ -9,6 +9,7 @@ import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart' as myPermission;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_settings/app_settings.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 final imagePicker = ImagePicker();
 final gemini = Gemini.instance;
@@ -37,11 +38,23 @@ class _SearchScreenState extends State<SearchScreen>
   String _isConnected = "";
   bool _isKorean = false;
   bool _isLoading = false;
+
   void _initLocation() async {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
     LocationData? locationData;
+    bool result;
 
+    result = await InternetConnection().hasInternetAccess;
+    if (!result) {
+      setState(() {
+        _isConnected = "wrong";
+      });
+      return;
+    }
+    setState(() {
+      _isConnected = "";
+    });
     _serviceEnabled = await location.serviceEnabled();
     if (!_serviceEnabled) {
       _serviceEnabled = await location.requestService();
@@ -85,9 +98,26 @@ class _SearchScreenState extends State<SearchScreen>
     }
   }
 
+  void _initInternetCheck() async {
+    bool result;
+
+    result = await InternetConnection().hasInternetAccess;
+    if (!result) {
+      setState(() {
+        _isConnected = "wrong";
+        _pictureResult = null;
+      });
+      return;
+    }
+    setState(() {
+      _isConnected = "";
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+
     _initLocation();
     WidgetsBinding.instance.addObserver(this);
   }
@@ -101,10 +131,13 @@ class _SearchScreenState extends State<SearchScreen>
       _initLocation();
     } else {
       gemini.cancelRequest();
+      _initInternetCheck();
+
       setState(() {
         _result = null;
         _isKorean = false;
       });
+      retryPictureResul();
     }
   }
 
@@ -136,6 +169,8 @@ class _SearchScreenState extends State<SearchScreen>
         });
         _initLocation();
       }
+      _initInternetCheck();
+      retryPictureResul();
     }
   }
 
@@ -234,11 +269,58 @@ class _SearchScreenState extends State<SearchScreen>
     }
   }
 
+  void retryPictureResul() async {
+    if (_pickedImage != null) {
+      try {
+        final response = await gemini.textAndImage(
+            text:
+                "first of all, must check whether the picture only include food or food ingredient only or not. if there are no food or food ingredient, then show wrong picture text. and if there are food or food ingredient, then could you recommend any food using this picture? must use the ingredient on picture only. Answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer!",
+            images: [_pickedImage!.readAsBytesSync()]);
+
+        if (response != null) {
+          if (response.content != null) {
+            setState(() {
+              _pictureResult = response.content!.parts![0].text;
+            });
+
+            // RegExp regExp = RegExp(r'(?<=## \*\*).*(?=\*\*)',
+            //     multiLine: true, caseSensitive: false);
+            final SharedPreferences prefs =
+                await SharedPreferences.getInstance();
+            // List<String> menuNames = regExp
+            //     .allMatches(response.content!.parts![0].text!)
+            //     .map((item) => item.group(0).toString())
+            //     .toList();
+
+            await prefs.setString('menu', response.content!.parts![0].text!);
+          }
+        }
+      } catch (e) {
+        setState(() {
+          _isConnected = "wrong";
+        });
+      }
+    }
+  }
+
   void _takePicture(ImageSource source) async {
     final result = await imagePicker.pickImage(source: source);
 
     setState(() {
       _pickedImage = File(result!.path);
+    });
+
+    bool _result;
+
+    _result = await InternetConnection().hasInternetAccess;
+    if (!_result) {
+      setState(() {
+        _isConnected = "wrong";
+      });
+      return;
+    }
+    setState(() {
+      _isConnected = "";
     });
 
     try {
@@ -273,6 +355,19 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   void _translate(String lang) async {
+    bool result;
+
+    result = await InternetConnection().hasInternetAccess;
+    if (!result) {
+      setState(() {
+        _isConnected = "wrong";
+      });
+      return;
+    }
+    setState(() {
+      _isConnected = "";
+    });
+
     if (widget.detailOption) {
       setState(() {
         _isLoading = true;
@@ -420,7 +515,10 @@ class _SearchScreenState extends State<SearchScreen>
                       );
                     } else {
                       return _pickedImage != null
-                          ? CircularProgressIndicator()
+                          ? _isConnected == "wrong"
+                              ? Text(
+                                  "To get AI suggestion needs internet connection...")
+                              : CircularProgressIndicator()
                           : _isConnected == "wrong"
                               ? Text(
                                   "To get AI suggestion needs internet connection...")
