@@ -1,19 +1,17 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:location/location.dart';
 import 'package:permission_handler/permission_handler.dart' as myPermission;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:app_settings/app_settings.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 final imagePicker = ImagePicker();
 final gemini = Gemini.instance;
-Location location = Location();
 var format = DateFormat.yMd();
 
 class SearchScreen extends StatefulWidget {
@@ -38,11 +36,172 @@ class _SearchScreenState extends State<SearchScreen>
   String _isConnected = "";
   bool _isKorean = false;
   bool _isLoading = false;
+  String _myPlace = "";
+
+  _openPlaceModal() async {
+    return showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: Text("Pick your Place"),
+          content: Container(
+            width: double.infinity,
+            height: 100,
+            child: ListView(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "New Zealand";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("New Zealand"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Taiwan";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Taiwan"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Republic of Korea";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Republic of Korea"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Malaysia";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Malaysia"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "USA";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("USA"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Vietnam";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Vietnam"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Brunei";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Brunei"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Singapore";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Singapore"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Australia";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Australia"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "India";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("India"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Indonesia";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Indonesia"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Japan";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Japan"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Canada";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Canada"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Thailand";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Thailand"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Philippines";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Philippines"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _myPlace = "Hong Kong";
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Hong Kong"),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _initLocation() async {
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-    LocationData? locationData;
     bool result;
 
     result = await InternetConnection().hasInternetAccess;
@@ -55,34 +214,12 @@ class _SearchScreenState extends State<SearchScreen>
     setState(() {
       _isConnected = "";
     });
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        setState(() {
-          _result = "try again";
-        });
-        return;
-      }
-    }
 
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-
-      if (_permissionGranted != PermissionStatus.granted) {
-        setState(() {
-          _result = "To use this app need to allow location";
-        });
-        return;
-      }
-    }
-
-    locationData = await location.getLocation();
+    await _openPlaceModal();
 
     try {
       var response = await gemini.text(
-          "You are a best chef. and Please suggest me top1 food for today. Your answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer! when you search the reference for the suggestion, please consider certain country where include this location in latitude ${locationData.latitude} and longitude ${locationData.longitude} and time must be ${DateTime.now().hour}");
+          "You are a best chef. and Please suggest me top1 food in ${_myPlace} for today. Your answer must be with name and recipe of the recommended food only beside recommended food name and recipe, please do not write on your answer! when you search the reference for the suggestion, please consider time information too. Time must be ${DateTime.now().hour}");
       if (response != null) {
         if (response.content != null) {
           setState(() {
@@ -136,8 +273,9 @@ class _SearchScreenState extends State<SearchScreen>
       setState(() {
         _result = null;
         _isKorean = false;
+        _myPlace = "";
       });
-      retryPictureResul();
+      retryPictureResult();
     }
   }
 
@@ -147,6 +285,11 @@ class _SearchScreenState extends State<SearchScreen>
 
     super.dispose();
     gemini.cancelRequest();
+    setState(() {
+      _result = null;
+      _isKorean = false;
+      _myPlace = "";
+    });
     WidgetsBinding.instance.removeObserver(this);
   }
 
@@ -155,22 +298,17 @@ class _SearchScreenState extends State<SearchScreen>
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.resumed) {
-      var location = await myPermission.Permission.location.status;
-      var locationAlways = await myPermission.Permission.locationAlways.status;
-      var locationWhenInUse =
-          await myPermission.Permission.locationWhenInUse.status;
-
-      if (location == myPermission.PermissionStatus.granted ||
-          locationAlways == myPermission.PermissionStatus.granted ||
-          locationWhenInUse == myPermission.PermissionStatus.granted) {
+      if (_myPlace != "") {
         setState(() {
           _result = null;
           _isKorean = false;
+          _myPlace = "";
         });
         _initLocation();
+      } else {
+        _initInternetCheck();
+        retryPictureResult();
       }
-      _initInternetCheck();
-      retryPictureResul();
     }
   }
 
@@ -269,7 +407,7 @@ class _SearchScreenState extends State<SearchScreen>
     }
   }
 
-  void retryPictureResul() async {
+  void retryPictureResult() async {
     if (_pickedImage != null) {
       try {
         final response = await gemini.textAndImage(
@@ -468,40 +606,23 @@ class _SearchScreenState extends State<SearchScreen>
                 builder: (context, child, response, loading) {
                   if (widget.detailOption) {
                     if (_result != null) {
-                      if (_result != "try again" &&
-                          _result != "To use this app need to allow location") {
-                        return SizedBox(
-                          width: double.infinity,
-                          height: 600,
-                          child: Markdown(
-                            data: _result!,
-                            selectable: true,
-                          ),
-                        );
-                      } else {
-                        return Column(
-                          children: [
-                            Text("Try again"),
-                            SizedBox(
-                              height: 16,
-                            ),
-                            ElevatedButton(
-                                onPressed: () {
-                                  AppSettings.openAppSettings(
-                                    type: AppSettingsType.location,
-                                  );
-                                },
-                                child: Text("open location setting"))
-                          ],
-                        );
-                      }
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 600,
+                        child: Markdown(
+                          data: _result!,
+                          selectable: true,
+                        ),
+                      );
                     } else {
                       if (_isConnected == "wrong") {
                         return Text(
                             "To get AI suggestion needs internet connection...");
                       }
 
-                      return Text("Searching...");
+                      return _myPlace != ""
+                          ? Text("Searching...")
+                          : Text("...");
                     }
                   } else {
                     if (_pictureResult != null) {
