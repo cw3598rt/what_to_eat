@@ -4,7 +4,7 @@
 
 ## 다운로드 링크
 
-심사중...
+https://apps.apple.com/us/app/whattoeattoday/id6511217089
 
 ## 사용법
 
